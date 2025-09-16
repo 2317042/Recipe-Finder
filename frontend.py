@@ -1,48 +1,38 @@
-# frontend.py
-import tkinter as tk
-from tkinter import messagebox
+from flask import Flask, render_template_string, request
 import requests
 
-def search_recipe():
-    query = entry.get()
-    if not query:
-        messagebox.showwarning("Input Error", "Please enter a recipe name")
-        return
-    
-    try:
-        response = requests.get(f"http://127.0.0.1:8000/search", params={"query": query})
-        data = response.json()
+app = Flask(__name__)
 
-        results.delete(1.0, tk.END)  # clear old text
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html>
+<head><title>Recipe Finder</title></head>
+<body>
+  <h2>Recipe Finder</h2>
+  <form method="get" action="/search">
+    <input type="text" name="item" placeholder="Enter recipe">
+    <button type="submit">Search</button>
+  </form>
 
-        if not data or not data.get("meals"):
-            results.insert(tk.END, "No recipes found.\n")
-            return
-        
-        for meal in data["meals"]:
-            results.insert(tk.END, f"🍽 {meal['strMeal']}\n")
-            results.insert(tk.END, f"Category: {meal['strCategory']}\n")
-            results.insert(tk.END, f"Area: {meal['strArea']}\n")
-            results.insert(tk.END, f"Instructions: {meal['strInstructions'][:200]}...\n\n")
+  {% if result %}
+    <h3>Result:</h3>
+    <pre>{{ result }}</pre>
+  {% endif %}
+</body>
+</html>
+"""
 
-    except Exception as e:
-        messagebox.showerror("Error", f"Failed to fetch recipes: {e}")
+@app.route("/")
+def home():
+    return render_template_string(HTML_TEMPLATE)
 
-# GUI setup
-root = tk.Tk()
-root.title("Recipe Finder")
-root.geometry("600x400")
+@app.route("/search")
+def search():
+    item = request.args.get("item")
+    if not item:
+        return render_template_string(HTML_TEMPLATE, result="Please enter a recipe")
+    response = requests.get(f"http://127.0.0.1:8000/search/{item}")
+    return render_template_string(HTML_TEMPLATE, result=response.json())
 
-label = tk.Label(root, text="Enter recipe name:")
-label.pack()
-
-entry = tk.Entry(root, width=40)
-entry.pack(pady=5)
-
-search_btn = tk.Button(root, text="Search", command=search_recipe)
-search_btn.pack(pady=5)
-
-results = tk.Text(root, wrap=tk.WORD, height=15)
-results.pack(pady=10)
-
-root.mainloop()
+if __name__ == "__main__":
+    app.run(port=5000)
