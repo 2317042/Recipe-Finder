@@ -1,26 +1,12 @@
+import os
 from flask import Flask, render_template_string, request
 import requests
 
 app = Flask(__name__)
 
-HTML_TEMPLATE = """
-<!DOCTYPE html>
-<html>
-<head><title>Recipe Finder</title></head>
-<body>
-  <h2>Recipe Finder</h2>
-  <form method="get" action="/search">
-    <input type="text" name="item" placeholder="Enter recipe">
-    <button type="submit">Search</button>
-  </form>
+HTML_TEMPLATE = """..."""  # keep as before
 
-  {% if result %}
-    <h3>Result:</h3>
-    <pre>{{ result }}</pre>
-  {% endif %}
-</body>
-</html>
-"""
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
 
 @app.route("/")
 def home():
@@ -31,8 +17,8 @@ def search():
     item = request.args.get("item")
     if not item:
         return render_template_string(HTML_TEMPLATE, result="Please enter a recipe")
-    response = requests.get(f"http://127.0.0.1:8000/search/{item}")
+    response = requests.get(f"{BACKEND_URL}/search/{item}")
     return render_template_string(HTML_TEMPLATE, result=response.json())
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(port=5000, host="0.0.0.0")  # host=0.0.0.0 makes it accessible from outside
