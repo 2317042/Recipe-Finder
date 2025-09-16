@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+
+    environment {
+        BACKEND_URL = "http://localhost:8000"  // Frontend will use this
+    }
+
+    stages {
+        stage('Start Backend') {
+            steps {
+                echo '🚀 Starting Backend...'
+                // Run FastAPI backend in background
+                // Windows
+                bat 'start /B python backend.py'  
+                // Linux alternative: sh 'nohup python backend.py &' 
+                sleep 5  // wait a few seconds for backend to start
+            }
+        }
+
+        stage('Start Frontend') {
+            steps {
+                echo '🚀 Starting Frontend...'
+                // Run Flask frontend in background
+                bat 'start /B python frontend.py'  
+                // Linux alternative: sh 'nohup python frontend.py &'
+                sleep 5  // wait for frontend to start
+            }
+        }
+
+        stage('Open Frontend') {
+            steps {
+                echo '🌐 Opening Frontend in browser...'
+                // Automatically open browser (Windows)
+                bat 'start http://localhost:5000'
+            }
+        }
+
+        stage('Pipeline Success') {
+            steps {
+                echo '✅ Backend and Frontend are running. Access frontend at http://localhost:5000'
+            }
+        }
+    }
+}
